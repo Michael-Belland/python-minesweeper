@@ -30,7 +30,25 @@ class Board:
         return newBoard
 
     def printBoard(self):
-        print self.board
+        toPrint = ""
+        for rowNum in xrange(len(self.board)):
+            if rowNum == 0: 
+                lineToPrint = "["
+            else:
+                lineToPrint = " "
+
+            lineToPrint += str(self.board[rowNum])
+
+            if rowNum < len(self.board) - 1: 
+                lineToPrint += ", \n"
+            else:
+                lineToPrint += "]"
+
+            #no real reason to individually add lineToPrint,
+            #rather than directly add to toPrint, but useful
+            #if we ever wanted something with individual lines
+            toPrint += lineToPrint
+        print toPrint
 
 
 
