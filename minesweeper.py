@@ -1,9 +1,12 @@
+from random import randint
+
 class Board:
 
     def __init__(self, numRows, numColumns, numMines):
         self.numRows = numRows
         self.numColumns = numColumns
         self.numMines = numMines
+        self.mines = set()
         self.gameOver = False
 
         self.board = self.makeNewBoard(self.numRows, self.numColumns)
@@ -29,6 +32,9 @@ class Board:
             newBoard[i] = [0] * numColumns
         return newBoard
 
+    #TODO: fix printBoard behavior so board always is rectangular
+    #      (currently, mines displays as the three character 'M', 
+    #       making different rows different lengths in the output.)
     def printBoard(self):
         toPrint = ""
         for rowNum in xrange(len(self.board)):
@@ -50,6 +56,22 @@ class Board:
             toPrint += lineToPrint
         print toPrint
 
+    def populateMines(self):
+        #as a precaution, clear mines before generating new ones
+        self.mines = set()
+        self.board = self.makeNewBoard(self.numRows, self.numColumns)
+
+        if self.numRows*self.numColumns < self.numMines:
+            print "Error: too many mines to fit in board."
+
+        while len(self.mines) < self.numMines:
+            i = randint(0, self.numRows-1)
+            j = randint(0, self.numColumns-1)
+            if (i,j) not in self.mines:
+                self.mines.add((i,j))
+                self.board[i][j] = "M"
+
+
 
 
 #if using imports, this would be main.py
@@ -59,6 +81,11 @@ numColumns = input("How many columns in the board? ")
 numMines = input("How many mines in the board? ")
 
 gameBoard = Board(numRows, numColumns, numMines)
+gameBoard.printState()
+
+#TODO: replace input with a function that sanitizes input first
+a = input("Press any key to continue to next test: populating mines.")
+gameBoard.populateMines()
 gameBoard.printState()
 
 
