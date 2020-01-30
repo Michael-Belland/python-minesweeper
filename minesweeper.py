@@ -1,5 +1,25 @@
 from random import randint
 
+#TODO: this is pretty similar to what prints the row list in Board.printBoard...
+#      can we consolidate the two functions into one?
+#      The inputs differ (Board.printBoard is a list of lists, while this is a
+#      list of strings), so it's not as simple as having different function signatures
+def prettyPrintBasicList(inputList):
+    toReturn = "["
+    listIndex = 0
+
+    #print all elements of the list except the last one, which is special cased
+    while listIndex < len(inputList) - 1:
+        toReturn = toReturn + str(inputList[listIndex]) + ", "
+        listIndex += 1
+
+    #print the last element of the list, assuming the list was non-empty
+    if len(inputList) > 0:
+        toReturn = toReturn + str(inputList[-1])
+    toReturn = toReturn + "]"
+
+    return toReturn
+
 class Board:
 
     def __init__(self, numRows, numColumns, numMines):
@@ -9,10 +29,11 @@ class Board:
         self.mines = set()
         self.gameOver = False
 
-        self.board = self.makeNewBoard(self.numRows, self.numColumns)
+        self.stateBoard = self.makeNewBoard(self.numRows, self.numColumns)
+        self.playerBoard = self.makeNewBoard(self.numRows, self.numColumns)
 
     def printState(self):
-        print "This board has %(nR)x row(s), %(nC)x column(s), and %(nM)x mine(s)." % {"nR": self.numRows, "nC": self.numColumns, "nM": self.numMines}
+        print "This board has %(nR)d row(s), %(nC)d column(s), and %(nM)d mine(s)." % {"nR": self.numRows, "nC": self.numColumns, "nM": self.numMines}
         self.printBoard()
 
     """
@@ -37,15 +58,16 @@ class Board:
     #       making different rows different lengths in the output.)
     def printBoard(self):
         toPrint = ""
-        for rowNum in xrange(len(self.board)):
+        for rowNum in xrange(len(self.stateBoard)):
             if rowNum == 0: 
                 lineToPrint = "["
             else:
                 lineToPrint = " "
 
-            lineToPrint += str(self.board[rowNum])
+            #lineToPrint += str(self.stateBoard[rowNum])
+            lineToPrint += prettyPrintBasicList(self.stateBoard[rowNum])
 
-            if rowNum < len(self.board) - 1: 
+            if rowNum < len(self.stateBoard) - 1: 
                 lineToPrint += ", \n"
             else:
                 lineToPrint += "]"
@@ -59,7 +81,7 @@ class Board:
     def populateMines(self):
         #as a precaution, clear mines before generating new ones
         self.mines = set()
-        self.board = self.makeNewBoard(self.numRows, self.numColumns)
+        self.stateBoard = self.makeNewBoard(self.numRows, self.numColumns)
 
         if self.numRows*self.numColumns < self.numMines:
             print "Error: too many mines to fit in board."
@@ -69,7 +91,7 @@ class Board:
             j = randint(0, self.numColumns-1)
             if (i,j) not in self.mines:
                 self.mines.add((i,j))
-                self.board[i][j] = "M"
+                self.stateBoard[i][j] = "M"
 
 
 
@@ -84,7 +106,7 @@ gameBoard = Board(numRows, numColumns, numMines)
 gameBoard.printState()
 
 #TODO: replace input with a function that sanitizes input first
-a = input("Press any key to continue to next test: populating mines.")
+#a = input("Press any key to continue to next test: populating mines.")
 gameBoard.populateMines()
 gameBoard.printState()
 
