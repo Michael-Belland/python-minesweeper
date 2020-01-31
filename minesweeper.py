@@ -30,11 +30,12 @@ class Board:
         self.gameOver = False
 
         self.stateBoard = self.makeNewBoard(self.numRows, self.numColumns)
-        self.playerBoard = self.makeNewBoard(self.numRows, self.numColumns)
+        self.playerBoard = self.makeNewBoard(self.numRows, self.numColumns, "#")
 
     def printState(self):
         print "This board has %(nR)d row(s), %(nC)d column(s), and %(nM)d mine(s)." % {"nR": self.numRows, "nC": self.numColumns, "nM": self.numMines}
-        self.printBoard()
+        self.printBoard(self.stateBoard)
+        self.printBoard(self.playerBoard)
 
     """
     Check standard docstring procedure
@@ -47,27 +48,27 @@ class Board:
     Make sure to take care with indices!
     Confusion from variables sharing names with instance variables?
     """
-    def makeNewBoard(self, numRows, numColumns):
+    def makeNewBoard(self, numRows, numColumns, displayChar=0):
         newBoard = [0] * numRows
         for i in xrange(numRows):
-            newBoard[i] = [0] * numColumns
+            newBoard[i] = [displayChar] * numColumns
         return newBoard
 
     #TODO: fix printBoard behavior so board always is rectangular
     #      (currently, mines displays as the three character 'M', 
     #       making different rows different lengths in the output.)
-    def printBoard(self):
+    def printBoard(self, board):
         toPrint = ""
-        for rowNum in xrange(len(self.stateBoard)):
+        for rowNum in xrange(len(board)):
             if rowNum == 0: 
                 lineToPrint = "["
             else:
                 lineToPrint = " "
 
             #lineToPrint += str(self.stateBoard[rowNum])
-            lineToPrint += prettyPrintBasicList(self.stateBoard[rowNum])
+            lineToPrint += prettyPrintBasicList(board[rowNum])
 
-            if rowNum < len(self.stateBoard) - 1: 
+            if rowNum < len(board) - 1: 
                 lineToPrint += ", \n"
             else:
                 lineToPrint += "]"
@@ -82,6 +83,7 @@ class Board:
         #as a precaution, clear mines before generating new ones
         self.mines = set()
         self.stateBoard = self.makeNewBoard(self.numRows, self.numColumns)
+        self.playerBoard = self.makeNewBoard(self.numRows, self.numColumns, "#")
 
         if self.numRows*self.numColumns < self.numMines:
             print "Error: too many mines to fit in board."
@@ -92,6 +94,13 @@ class Board:
             if (i,j) not in self.mines:
                 self.mines.add((i,j))
                 self.stateBoard[i][j] = "M"
+
+    #The player's coordinate system will be like a typical x-y graph:
+    #The bottom-left is 0,0, and increasing those numbers moves to the top right.
+    def playerAddFlag(self, flagX, flagY):
+        self.playerBoard[-flagY-1][flagX] = "F"
+
+
 
 
 
@@ -105,9 +114,15 @@ numMines = input("How many mines in the board? ")
 gameBoard = Board(numRows, numColumns, numMines)
 gameBoard.printState()
 
+
 #TODO: replace input with a function that sanitizes input first
 #a = input("Press any key to continue to next test: populating mines.")
 gameBoard.populateMines()
+gameBoard.printState()
+
+inputX = input("Add a flag at X=")
+inputY = input("Add a flag at Y=")
+gameBoard.playerAddFlag(inputX, inputY)
 gameBoard.printState()
 
 
