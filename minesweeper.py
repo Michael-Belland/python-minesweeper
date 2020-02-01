@@ -20,6 +20,8 @@ def prettyPrintBasicList(inputList):
 
     return toReturn
 
+#The player's coordinate system will be like a typical x-y graph:
+#The bottom-left is 0,0, and increasing those numbers moves to the top right.
 class Board:
 
     def __init__(self, numRows, numColumns, numMines):
@@ -29,6 +31,8 @@ class Board:
         self.mines = set()
         self.gameOver = False
 
+        #Honestly, an object oriented approach (a 2d array of Cells, with subclassing)
+        #would probably be more intuitive than this design.  But let's see where this goes.
         self.stateBoard = self.makeNewBoard(self.numRows, self.numColumns)
         self.playerBoard = self.makeNewBoard(self.numRows, self.numColumns, "#")
 
@@ -95,10 +99,62 @@ class Board:
                 self.mines.add((i,j))
                 self.stateBoard[i][j] = "M"
 
-    #The player's coordinate system will be like a typical x-y graph:
-    #The bottom-left is 0,0, and increasing those numbers moves to the top right.
-    def playerAddFlag(self, flagX, flagY):
-        self.playerBoard[-flagY-1][flagX] = "F"
+        #next, go through the stateBoard to populate squares adjacent to mines with numbers
+        #TODO
+
+    #a player should only be able to flag a non-revealed square
+    #a flagged square should not be revealed, even by other squares
+    def playerToggleFlag(self, flagX, flagY):
+        if self.playerBoard[-flagY-1][flagX] == "#":
+            self.playerBoard[-flagY-1][flagX] = "F"
+        elif self.playerBoard[-flagY-1][flagX] == "F":
+            self.playerBoard[-flagY-1][flagX] = "#"
+
+    def playerProbeSquare(self, probeX, probeY):
+        if self.stateBoard[-flagY-1][flagX] == "M":
+            print "You uncovered a mine!  Game over."
+            #break the gameplay loop
+        else:
+            break
+            #TODO: if 0 square, uncover neighbors
+            #      if F square, ignore
+            #      otherwise, uncover square and stop
+
+    #convenience function for finding squares adjacent to inputted square
+    #the convenience comes in because it handles edge cases (literally)
+    def getNeighborSet(self, squareX, squareY):
+        neighbors = set()
+
+        if squareY - 1 >= 0:
+            neighbors.add((squareX, squareY-1))
+
+        if squareY + 1 < numRows:
+            neighbors.add((squareX, squareY+1))
+
+        if squareX - 1 >= 0: 
+            neighbors.add((squareX-1, squareY))
+
+            if squareY - 1 >= 0:
+                neighbors.add((squareX-1, squareY-1))
+
+            if squareY + 1 < numRows:
+                neighbors.add((squareX-1, squareY+1))
+
+        if squareX + 1 < numColumns:
+            neighbors.add((squareX+1, squareY))
+
+            if squareY - 1 >= 0:
+                neighbors.add((squareX+1, squareY-1))
+
+            if squareY + 1 < numRows:
+                neighbors.add((squareX+1, squareY+1))
+
+        return neighbors
+
+
+
+
+
 
 
 
