@@ -83,24 +83,37 @@ class Board:
             toPrint += lineToPrint
         print toPrint
 
-    def populateMines(self):
+    #ignoredSpaceList squares are guaranteed to not have mines
+    #this can be helpful by, for example, preventing the first
+    #square the user clicks from being a mine (populate mines after)
+    def populateMines(self, ignoredSpaceList=[]):
         #as a precaution, clear mines before generating new ones
         self.mines = set()
         self.stateBoard = self.makeNewBoard(self.numRows, self.numColumns)
         self.playerBoard = self.makeNewBoard(self.numRows, self.numColumns, "#")
 
-        if self.numRows*self.numColumns < self.numMines:
+        if self.numRows*self.numColumns < self.numMines+len(ignoredSpaceList):
             print "Error: too many mines to fit in board."
+            return
 
-        while len(self.mines) < self.numMines:
+        while len(self.mines) < self.numMines+len(ignoredSpaceList):
             i = randint(0, self.numRows-1)
             j = randint(0, self.numColumns-1)
-            if (i,j) not in self.mines:
+            if (i,j) not in self.mines and (i,j) not in ignoredSpaceList:
                 self.mines.add((i,j))
                 self.stateBoard[i][j] = "M"
 
         #next, go through the stateBoard to populate squares adjacent to mines with numbers
-        #TODO
+        #with oop implementation, go to each mine M -> find neighbors -> add *M to neighborMineList field (or increment a counter)
+        #here, we'll just go through each square of the board and calculate the mine count separately.
+
+        for j in xrange(self.numRows):
+            for i in xrange(self.numColumns):
+                if self.stateBoard[j][i] != "M":
+                    neighbors = self.getNeighborSet(i, j)
+                    a = lambda (x, y): self.stateBoard[y][x] == "M"
+                    neighborMineCount = len(filter(lambda (x, y): self.stateBoard[y][x] == "M", neighbors))
+                    self.stateBoard[j][i] = neighborMineCount
 
     #a player should only be able to flag a non-revealed square
     #a flagged square should not be revealed, even by other squares
@@ -115,10 +128,10 @@ class Board:
             print "You uncovered a mine!  Game over."
             #break the gameplay loop
         else:
-            break
             #TODO: if 0 square, uncover neighbors
             #      if F square, ignore
             #      otherwise, uncover square and stop
+            return
 
     #convenience function for finding squares adjacent to inputted square
     #the convenience comes in because it handles edge cases (literally)
@@ -176,10 +189,10 @@ gameBoard.printState()
 gameBoard.populateMines()
 gameBoard.printState()
 
-inputX = input("Add a flag at X=")
-inputY = input("Add a flag at Y=")
-gameBoard.playerAddFlag(inputX, inputY)
-gameBoard.printState()
+#inputX = input("Add a flag at X=")
+#inputY = input("Add a flag at Y=")
+#gameBoard.playerAddFlag(inputX, inputY)
+#gameBoard.printState()
 
 
 #game loop here; keep accepting inputs until game finished
