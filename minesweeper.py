@@ -138,21 +138,28 @@ class Board:
         if self.isBoardSet == False:
             self.populateMines([(boardX, boardY)])
 
+        if self.playerBoard != "#":
+            print "You can't clear an already cleared space!"
+            return
+
         if self.stateBoard[boardY][boardX] == "M":
             print "You uncovered a mine!  Game over."
-            #break the gameplay loop
+            #TODO: break the gameplay loop
+            return
+
         else:
             probedSet.add((boardX, boardY))
 
             if self.stateBoard[boardY][boardX] == "0":
 
                 probedSet.add((boardX, boardY))
+                self.playerBoard[boardY][boardX] = self.stateBoard[boardY][boardX]
 
                 for neighbor in getNeighborSet(boardX, boardY):
                     neighborX = neighbor[1]
                     neighborY = neighbor[2]
 
-                    if neighbor not in probedSet and self.playerBoard[neighborY][neighborX] != "#":
+                    if neighbor not in probedSet and self.playerBoard[neighborY][neighborX] == "#":
                         probedSet = self.propagateProbeSquare(neighborX, neighborY, probedSet)
 
 
@@ -172,6 +179,7 @@ class Board:
     def propagateProbeSquare(self, boardX, boardY, probedSet=set()):
         assert self.isBoardSet
 
+        assert self.playerBoard[boardY][boardX] == "#"
         assert self.stateBoard[boardY][boardX] != "M"
 
         probedSet.add((boardX, boardY))
@@ -179,11 +187,12 @@ class Board:
         if self.stateBoard[boardY][boardX] == "0":
 
             probedSet.add((boardX, boardY))
+            self.playerBoard[boardY][boardX] = self.stateBoard[boardY][boardX]
 
             for neighbor in getNeighborSet(boardX, boardY):
                 neighborX = neighbor[1]
                 neighborY = neighbor[2]
-                if neighbor not in probedSet and self.playerBoard[neighborY][neighborX] != "#":
+                if neighbor not in probedSet and self.playerBoard[neighborY][neighborX] == "#":
                     probedSet = self.propagateProbeSquare(neighborX, neighborY, probedSet)
 
         elif self.stateBoard[boardY][boardX] == "F":
