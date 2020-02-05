@@ -21,7 +21,11 @@ def prettyPrintBasicList(inputList):
     return toReturn
 
 #The player's coordinate system will be like a typical x-y graph:
-#The bottom-left is 0,0, and increasing those numbers moves to the top right.
+#The bottom-left is (0,0), the space to the right is (1,0), and so on.
+#
+#in retrospect, using X/Y for player coordinates and internal coordinates
+#in this class was not a good idea.  It creates significant confusion over
+#which coordinate system is being used and when to convert coordinates.
 class Board:
 
     def __init__(self, numRows, numColumns, numMines):
@@ -35,6 +39,7 @@ class Board:
         #would probably be more intuitive than this design.  But let's see where this goes.
         self.stateBoard = self.makeNewBoard(self.numRows, self.numColumns)
         self.playerBoard = self.makeNewBoard(self.numRows, self.numColumns, "#")
+        self.isBoardSet = False
 
     def printState(self):
         print "This board has %(nR)d row(s), %(nC)d column(s), and %(nM)d mine(s)." % {"nR": self.numRows, "nC": self.numColumns, "nM": self.numMines}
@@ -93,6 +98,7 @@ class Board:
         self.playerBoard = self.makeNewBoard(self.numRows, self.numColumns, "#")
 
         if self.numRows*self.numColumns < self.numMines+len(ignoredSpaceList):
+            self.isBoardSet = False
             print "Error: too many mines to fit in board."
             return
 
@@ -115,6 +121,8 @@ class Board:
                     neighborMineCount = len(filter(lambda (x, y): self.stateBoard[y][x] == "M", neighbors))
                     self.stateBoard[j][i] = neighborMineCount
 
+        self.isBoardSet = True
+
     #a player should only be able to flag a non-revealed square
     #a flagged square should not be revealed, even by other squares
     def playerToggleFlag(self, flagX, flagY):
@@ -123,15 +131,70 @@ class Board:
         elif self.playerBoard[-flagY-1][flagX] == "F":
             self.playerBoard[-flagY-1][flagX] = "#"
 
-    def playerProbeSquare(self, probeX, probeY):
-        if self.stateBoard[-flagY-1][flagX] == "M":
+    def playerProbeSquare(self, probeX, probeY, probedSet=set()):
+        boardX = probeX
+        boardY = self.numRows-probeY-1
+
+        if self.isBoardSet == False:
+            self.populateMines([(boardX, boardY)])
+
+        if self.stateBoard[boardY][boardX] == "M":
             print "You uncovered a mine!  Game over."
             #break the gameplay loop
         else:
-            #TODO: if 0 square, uncover neighbors
-            #      if F square, ignore
-            #      otherwise, uncover square and stop
-            return
+            probedSet.add((boardX, boardY))
+
+            if self.stateBoard[boardY][boardX] == "0":
+
+                probedSet.add((boardX, boardY))
+
+                for neighbor in getNeighborSet(boardX, boardY):
+                    neighborX = neighbor[1]
+                    neighborY = neighbor[2]
+
+                    if neighbor not in probedSet and self.playerBoard[neighborY][neighborX] != "#":
+                        probedSet = self.propagateProbeSquare(neighborX, neighborY, probedSet)
+
+
+            elif self.stateBoard[boardY][boardX] == "F":
+                print "To uncover this space, remove the flag at (%(boardX)d, %(boardY)d) first." % {"boardX": boardX, "boardY": boardY}
+                return
+            else:
+                #change the player board to reflect the number on the hidden board,
+                #then stop propagation, as at least one neighbor is a mine
+                self.playerBoard[boardY][boardX] = self.stateBoard[boardY][boardX]
+
+    #propagation of clearing a board to neighbors of an uncovered 0
+    #this function accepts internal board coordinates, updates the returned probedSet
+    #(which playerProbeSquare doesn't need to do), and provides a way to separate
+    #player-performed actions from computer-performed actions (for example, for counting
+    #number of user inputs used to finish a game)
+    def propagateProbeSquare(self, boardX, boardY, probedSet=set()):
+        assert self.isBoardSet
+
+        assert self.stateBoard[boardY][boardX] != "M"
+
+        probedSet.add((boardX, boardY))
+
+        if self.stateBoard[boardY][boardX] == "0":
+
+            probedSet.add((boardX, boardY))
+
+            for neighbor in getNeighborSet(boardX, boardY):
+                neighborX = neighbor[1]
+                neighborY = neighbor[2]
+                if neighbor not in probedSet and self.playerBoard[neighborY][neighborX] != "#":
+                    probedSet = self.propagateProbeSquare(neighborX, neighborY, probedSet)
+
+        elif self.stateBoard[boardY][boardX] == "F":
+            print "Flag at (%(boardX)d, %(boardY)d) cannot be cleared during propagation!" % {"boardX": boardX, "boardY": boardY}
+
+        else:
+            #change the player board to reflect the number on the hidden board,
+            #then stop propagation, as at least one neighbor is a mine
+            self.playerBoard[boardY][boardX] = self.stateBoard[boardY][boardX]
+
+        return probedSet
 
     #convenience function for finding squares adjacent to inputted square
     #the convenience comes in because it handles edge cases (literally)
