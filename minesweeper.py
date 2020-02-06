@@ -108,8 +108,6 @@ class Board:
             if (i,j) not in self.mines and (i,j) not in ignoredSpaceList:
                 self.mines.add((i,j))
                 self.stateBoard[j][i] = "M"
-        print self.mines
-        print ignoredSpaceList
 
         #next, go through the stateBoard to populate squares adjacent to mines with numbers
         #with oop implementation, go to each mine M -> find neighbors -> add *M to neighborMineList field (or increment a counter)
@@ -137,29 +135,30 @@ class Board:
         boardX = probeX
         boardY = self.numRows-probeY-1
 
-        if self.isBoardSet == False:
-            self.populateMines([(boardX, boardY)])
-
-
-        if self.stateBoard[boardY][boardX] == "F":
+        if self.playerBoard[boardY][boardX] == "F":
             print "To uncover this space, remove the flag at (%(probeX)d, %(probeY)d) first." % {"probeX": probeX, "probeY": probeY}
             return
         elif self.playerBoard[boardY][boardX] != "#":
             print "You can't clear an already cleared space!"
             return
 
+        #Don't populate mines until after user's first valid probe.
+        if self.isBoardSet == False:
+            self.populateMines([(boardX, boardY)])
+
 
         if self.stateBoard[boardY][boardX] == "M":
             print "You uncovered a mine!  Game over."
             self.gameOver = True
 
-        elif self.stateBoard[boardY][boardX] == "0":
+        elif self.stateBoard[boardY][boardX] == 0:
 
             self.playerBoard[boardY][boardX] = self.stateBoard[boardY][boardX]
 
-            for neighbor in getNeighborSet(boardX, boardY):
-                neighborX = neighbor[1]
-                neighborY = neighbor[2]
+            for neighbor in self.getNeighborSet(boardX, boardY):
+                print neighbor
+                neighborX = neighbor[0]
+                neighborY = neighbor[1]
 
                 #only propagate to covered, non-flagged squares
                 if self.playerBoard[neighborY][neighborX] == "#":
@@ -179,13 +178,13 @@ class Board:
         assert self.playerBoard[boardY][boardX] == "#"
         assert self.stateBoard[boardY][boardX] != "M"
 
-        if self.stateBoard[boardY][boardX] == "0":
+        if self.stateBoard[boardY][boardX] == 0:
 
             self.playerBoard[boardY][boardX] = self.stateBoard[boardY][boardX]
 
-            for neighbor in getNeighborSet(boardX, boardY):
-                neighborX = neighbor[1]
-                neighborY = neighbor[2]
+            for neighbor in self.getNeighborSet(boardX, boardY):
+                neighborX = neighbor[0]
+                neighborY = neighbor[1]
                 if self.playerBoard[neighborY][neighborX] == "#":
                     self.propagateProbeSquare(neighborX, neighborY)
 
@@ -233,6 +232,7 @@ class Board:
                 if self.stateBoard[rowNum][columnNum] != "M":
                     if self.playerBoard[rowNum][columnNum] == "#":
                         return False
+        print "You Win!"
         return True
 
 
