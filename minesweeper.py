@@ -41,7 +41,7 @@ class Board:
         self.playerBoard = self.makeNewBoard(self.numRows, self.numColumns, "#")
         self.isBoardSet = False
 
-    def printState(self):
+    def printState(self, printHidden = False):
         print "This board has %(nR)d row(s), %(nC)d column(s), and %(nM)d mine(s)." % {"nR": self.numRows, "nC": self.numColumns, "nM": self.numMines}
         self.printBoard(self.stateBoard)
         self.printBoard(self.playerBoard)
@@ -102,12 +102,14 @@ class Board:
             print "Error: too many mines to fit in board."
             return
 
-        while len(self.mines) < self.numMines+len(ignoredSpaceList):
-            i = randint(0, self.numRows-1)
-            j = randint(0, self.numColumns-1)
+        while len(self.mines) < self.numMines:
+            i = randint(0, self.numColumns-1)
+            j = randint(0, self.numRows-1)
             if (i,j) not in self.mines and (i,j) not in ignoredSpaceList:
                 self.mines.add((i,j))
-                self.stateBoard[i][j] = "M"
+                self.stateBoard[j][i] = "M"
+        print self.mines
+        print ignoredSpaceList
 
         #next, go through the stateBoard to populate squares adjacent to mines with numbers
         #with oop implementation, go to each mine M -> find neighbors -> add *M to neighborMineList field (or increment a counter)
@@ -131,79 +133,66 @@ class Board:
         elif self.playerBoard[-flagY-1][flagX] == "F":
             self.playerBoard[-flagY-1][flagX] = "#"
 
-    def playerProbeSquare(self, probeX, probeY, probedSet=set()):
+    def playerProbeSquare(self, probeX, probeY):
         boardX = probeX
         boardY = self.numRows-probeY-1
 
         if self.isBoardSet == False:
             self.populateMines([(boardX, boardY)])
 
-        if self.playerBoard != "#":
+
+        if self.stateBoard[boardY][boardX] == "F":
+            print "To uncover this space, remove the flag at (%(probeX)d, %(probeY)d) first." % {"probeX": probeX, "probeY": probeY}
+            return
+        elif self.playerBoard[boardY][boardX] != "#":
             print "You can't clear an already cleared space!"
             return
 
+
         if self.stateBoard[boardY][boardX] == "M":
             print "You uncovered a mine!  Game over."
-            #TODO: break the gameplay loop
-            return
+            self.gameOver = True
 
-        else:
-            probedSet.add((boardX, boardY))
+        elif self.stateBoard[boardY][boardX] == "0":
 
-            if self.stateBoard[boardY][boardX] == "0":
-
-                probedSet.add((boardX, boardY))
-                self.playerBoard[boardY][boardX] = self.stateBoard[boardY][boardX]
-
-                for neighbor in getNeighborSet(boardX, boardY):
-                    neighborX = neighbor[1]
-                    neighborY = neighbor[2]
-
-                    if neighbor not in probedSet and self.playerBoard[neighborY][neighborX] == "#":
-                        probedSet = self.propagateProbeSquare(neighborX, neighborY, probedSet)
-
-
-            elif self.stateBoard[boardY][boardX] == "F":
-                print "To uncover this space, remove the flag at (%(boardX)d, %(boardY)d) first." % {"boardX": boardX, "boardY": boardY}
-                return
-            else:
-                #change the player board to reflect the number on the hidden board,
-                #then stop propagation, as at least one neighbor is a mine
-                self.playerBoard[boardY][boardX] = self.stateBoard[boardY][boardX]
-
-    #propagation of clearing a board to neighbors of an uncovered 0
-    #this function accepts internal board coordinates, updates the returned probedSet
-    #(which playerProbeSquare doesn't need to do), and provides a way to separate
-    #player-performed actions from computer-performed actions (for example, for counting
-    #number of user inputs used to finish a game)
-    def propagateProbeSquare(self, boardX, boardY, probedSet=set()):
-        assert self.isBoardSet
-
-        assert self.playerBoard[boardY][boardX] == "#"
-        assert self.stateBoard[boardY][boardX] != "M"
-
-        probedSet.add((boardX, boardY))
-
-        if self.stateBoard[boardY][boardX] == "0":
-
-            probedSet.add((boardX, boardY))
             self.playerBoard[boardY][boardX] = self.stateBoard[boardY][boardX]
 
             for neighbor in getNeighborSet(boardX, boardY):
                 neighborX = neighbor[1]
                 neighborY = neighbor[2]
-                if neighbor not in probedSet and self.playerBoard[neighborY][neighborX] == "#":
-                    probedSet = self.propagateProbeSquare(neighborX, neighborY, probedSet)
 
-        elif self.stateBoard[boardY][boardX] == "F":
-            print "Flag at (%(boardX)d, %(boardY)d) cannot be cleared during propagation!" % {"boardX": boardX, "boardY": boardY}
+                #only propagate to covered, non-flagged squares
+                if self.playerBoard[neighborY][neighborX] == "#":
+                    self.propagateProbeSquare(neighborX, neighborY)
+
+        else:
+            #change the player board to reflect the number on the hidden board
+            self.playerBoard[boardY][boardX] = self.stateBoard[boardY][boardX]
+
+    #propagation of clearing a board to neighbors of an uncovered 0
+    #this function accepts internal board coordinates, and provides a way to separate
+    #player-performed actions from computer-performed actions (for example, for counting
+    #number of user inputs used to finish a game)
+    def propagateProbeSquare(self, boardX, boardY):
+        assert self.isBoardSet
+
+        assert self.playerBoard[boardY][boardX] == "#"
+        assert self.stateBoard[boardY][boardX] != "M"
+
+        if self.stateBoard[boardY][boardX] == "0":
+
+            self.playerBoard[boardY][boardX] = self.stateBoard[boardY][boardX]
+
+            for neighbor in getNeighborSet(boardX, boardY):
+                neighborX = neighbor[1]
+                neighborY = neighbor[2]
+                if self.playerBoard[neighborY][neighborX] == "#":
+                    self.propagateProbeSquare(neighborX, neighborY)
 
         else:
             #change the player board to reflect the number on the hidden board,
             #then stop propagation, as at least one neighbor is a mine
             self.playerBoard[boardY][boardX] = self.stateBoard[boardY][boardX]
-
-        return probedSet
 
     #convenience function for finding squares adjacent to inputted square
     #the convenience comes in because it handles edge cases (literally)
@@ -236,40 +225,50 @@ class Board:
 
         return neighbors
 
-
-
-
-
-
-
-
+    def isBoardFinished(self):
+        if self.gameOver:
+            return True
+        for rowNum in xrange(self.numRows):
+            for columnNum in xrange(self.numColumns):
+                if self.stateBoard[rowNum][columnNum] != "M":
+                    if self.playerBoard[rowNum][columnNum] == "#":
+                        return False
+        return True
 
 
 
 #if using imports, this would be main.py
-#initialize the board
-numRows = input("How many rows in the board? ")
-numColumns = input("How many columns in the board? ")
-numMines = input("How many mines in the board? ")
+doReplayGame = True
 
-gameBoard = Board(numRows, numColumns, numMines)
-gameBoard.printState()
+while(doReplayGame):
+    #initialize the board
+    numRows = int(raw_input("How many rows in the board? "))
+    numColumns = int(raw_input("How many columns in the board? "))
+    numMines = int(raw_input("How many mines in the board? "))
 
+    gameBoard = Board(numRows, numColumns, numMines)
+    gameBoard.printState(True)
 
-#TODO: replace input with a function that sanitizes input first
-#a = input("Press any key to continue to next test: populating mines.")
-gameBoard.populateMines()
-gameBoard.printState()
+    print "Board actions: probe, flag"
+    print "Coordinate system: bottom-left is 0,0.  To the right, the first number increases; as you move up, the second number increases."
 
-#inputX = input("Add a flag at X=")
-#inputY = input("Add a flag at Y=")
-#gameBoard.playerAddFlag(inputX, inputY)
-#gameBoard.printState()
+    while gameBoard.isBoardFinished() is False:
 
+        userAction, userX, userY = raw_input("Enter board action followed by coordinates (e.g. probe 0 1): ").split()
+        userX = int(userX)
+        userY = int(userY)
+        if userAction == "probe":
+            gameBoard.playerProbeSquare(userX, userY)
+        elif userAction == "flag":
+            gameBoard.playerToggleFlag(userX, userY)
+        else:
+            print "Error: did not recognize user action "+userAction
 
-#game loop here; keep accepting inputs until game finished
-#while not gameBoard.gameOver():
-#    gameBoard.step()
+        gameBoard.printState(True)
+
+    replayGameResponse = raw_input("Would you like to play another game? (y for yes, any other input for no.) ")
+    if replayGameResponse != "y":
+        doReplayGame = False
 
 print "Program execution complete."
 
@@ -277,3 +276,4 @@ print "Program execution complete."
 #invalid inputs for board size or mine count
 #  - what if these inputs aren't numbers?
 #  - what if there are too many mines (numMines > numRows * numColumns)?
+#  - what if the user probes a square at an x-coordinate i where 0 <= i < numColumns isn't True?
