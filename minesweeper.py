@@ -33,6 +33,7 @@ class Board:
         self.numColumns = numColumns
         self.numMines = numMines
         self.mines = set()
+        self.numFlags = 0
         self.gameOver = False
 
         #Honestly, an object oriented approach (a 2d array of Cells, with subclassing)
@@ -42,8 +43,11 @@ class Board:
         self.isBoardSet = False
 
     def printState(self, printHidden = False):
+        numLeft = self.numMines - self.numFlags
         print "This board has %(nR)d row(s), %(nC)d column(s), and %(nM)d mine(s)." % {"nR": self.numRows, "nC": self.numColumns, "nM": self.numMines}
-        self.printBoard(self.stateBoard)
+        print "This board has %(nF)d flag(s). Look out for %(nL)d mine(s)!" % {"nF": self.numFlags, "nL": numLeft}
+        if printHidden:
+            self.printBoard(self.stateBoard)
         self.printBoard(self.playerBoard)
 
     """
@@ -95,7 +99,6 @@ class Board:
         #as a precaution, clear mines before generating new ones
         self.mines = set()
         self.stateBoard = self.makeNewBoard(self.numRows, self.numColumns)
-        self.playerBoard = self.makeNewBoard(self.numRows, self.numColumns, "#")
 
         if self.numRows*self.numColumns < self.numMines+len(ignoredSpaceList):
             self.isBoardSet = False
@@ -128,8 +131,12 @@ class Board:
     def playerToggleFlag(self, flagX, flagY):
         if self.playerBoard[-flagY-1][flagX] == "#":
             self.playerBoard[-flagY-1][flagX] = "F"
+            self.numFlags += 1
         elif self.playerBoard[-flagY-1][flagX] == "F":
             self.playerBoard[-flagY-1][flagX] = "#"
+            self.numFlags -= 1
+        else:
+            print "You can't put a flag on a cleared space!"
 
     def playerProbeSquare(self, probeX, probeY):
         boardX = probeX
@@ -146,6 +153,7 @@ class Board:
         if self.isBoardSet == False:
             self.populateMines([(boardX, boardY)])
 
+        self.playerBoard[boardY][boardX] = self.stateBoard[boardY][boardX]
 
         if self.stateBoard[boardY][boardX] == "M":
             print "You uncovered a mine!  Game over."
@@ -153,10 +161,7 @@ class Board:
 
         elif self.stateBoard[boardY][boardX] == 0:
 
-            self.playerBoard[boardY][boardX] = self.stateBoard[boardY][boardX]
-
             for neighbor in self.getNeighborSet(boardX, boardY):
-                print neighbor
                 neighborX = neighbor[0]
                 neighborY = neighbor[1]
 
@@ -164,9 +169,7 @@ class Board:
                 if self.playerBoard[neighborY][neighborX] == "#":
                     self.propagateProbeSquare(neighborX, neighborY)
 
-        else:
-            #change the player board to reflect the number on the hidden board
-            self.playerBoard[boardY][boardX] = self.stateBoard[boardY][boardX]
+        #no special action for other squares
 
     #propagation of clearing a board to neighbors of an uncovered 0
     #this function accepts internal board coordinates, and provides a way to separate
@@ -176,6 +179,7 @@ class Board:
         assert self.isBoardSet
 
         assert self.playerBoard[boardY][boardX] == "#"
+
         assert self.stateBoard[boardY][boardX] != "M"
 
         if self.stateBoard[boardY][boardX] == 0:
@@ -226,13 +230,15 @@ class Board:
 
     def isBoardFinished(self):
         if self.gameOver:
+            gameBoard.printState(True)
             return True
         for rowNum in xrange(self.numRows):
             for columnNum in xrange(self.numColumns):
                 if self.stateBoard[rowNum][columnNum] != "M":
-                    if self.playerBoard[rowNum][columnNum] == "#":
+                    if self.playerBoard[rowNum][columnNum] == "#" or self.playerBoard[rowNum][columnNum] == "F":
                         return False
         print "You Win!"
+        gameBoard.printState(True)
         return True
 
 
@@ -247,12 +253,14 @@ while(doReplayGame):
     numMines = int(raw_input("How many mines in the board? "))
 
     gameBoard = Board(numRows, numColumns, numMines)
-    gameBoard.printState(True)
+    gameBoard.printState(False) #set to True to cheat and see the hidden board
 
     print "Board actions: probe, flag"
     print "Coordinate system: bottom-left is 0,0.  To the right, the first number increases; as you move up, the second number increases."
 
     while gameBoard.isBoardFinished() is False:
+
+        gameBoard.printState(False) #set to True to cheat and see the hidden board
 
         userAction, userX, userY = raw_input("Enter board action followed by coordinates (e.g. probe 0 1): ").split()
         userX = int(userX)
@@ -263,8 +271,6 @@ while(doReplayGame):
             gameBoard.playerToggleFlag(userX, userY)
         else:
             print "Error: did not recognize user action "+userAction
-
-        gameBoard.printState(True)
 
     replayGameResponse = raw_input("Would you like to play another game? (y for yes, any other input for no.) ")
     if replayGameResponse != "y":
