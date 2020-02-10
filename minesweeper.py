@@ -255,7 +255,10 @@ while(doReplayGame):
     gameBoard = Board(numRows, numColumns, numMines)
     gameBoard.printState(False) #set to True to cheat and see the hidden board
 
-    print "Board actions: probe, flag"
+    boardActions = ["probe", "flag", "quit", "new"]
+    quitFlag = False
+
+    print "Board actions: "+prettyPrintBasicList(boardActions)
     print "Coordinate system: bottom-left is 0,0.  To the right, the first number increases; as you move up, the second number increases."
 
     while gameBoard.isBoardFinished() is False:
@@ -269,8 +272,19 @@ while(doReplayGame):
             gameBoard.playerProbeSquare(userX, userY)
         elif userAction == "flag":
             gameBoard.playerToggleFlag(userX, userY)
+        elif userAction == "quit":
+            quitFlag = True
+            doReplayGame = False
+            break
+        elif userAction == "new":
+            quitFlag = True
+            doReplayGame = True
+            break
         else:
             print "Error: did not recognize user action "+userAction
+
+    if quitFlag:
+        continue
 
     replayGameResponse = raw_input("Would you like to play another game? (y for yes, any other input for no.) ")
     if replayGameResponse != "y":
