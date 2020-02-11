@@ -245,6 +245,7 @@ class Board:
 
 #if using imports, this would be main.py
 doReplayGame = True
+argumentMismatchErrorMsg = "Error: Incorrect number of arguments.  For how to use commands, enter \"help\".  To end the game, enter \"quit\"."
 
 while(doReplayGame):
     #initialize the board
@@ -265,21 +266,48 @@ while(doReplayGame):
 
         gameBoard.printState(False) #set to True to cheat and see the hidden board
 
-        userAction, userX, userY = raw_input("Enter board action followed by coordinates (e.g. probe 0 1): ").split()
-        userX = int(userX)
-        userY = int(userY)
+        userInput = raw_input("Enter board action followed by coordinates (e.g. probe 0 1): ").split()
+        if len(userInput) == 0:
+            print "ERROR: No user input detected.  For how to use commands, enter \"help\".  To end the game, enter \"quit\"."
+            continue
+        userAction = userInput[0]
+
         if userAction == "probe":
+            if len(userInput) != 3:
+                print argumentMismatchErrorMsg
+                continue
+            userX = int(userInput[1])
+            userY = int(userInput[2])
             gameBoard.playerProbeSquare(userX, userY)
+
         elif userAction == "flag":
+            if len(userInput) != 3:
+                print argumentMismatchErrorMsg
+                continue
+            userX = int(userInput[1])
+            userY = int(userInput[2])
             gameBoard.playerToggleFlag(userX, userY)
+
         elif userAction == "quit":
+            #Could check argument list length, but if you type "quit" first, you probably just want to quit.
             quitFlag = True
             doReplayGame = False
             break
+
         elif userAction == "new":
+            #Same as above with "quit".  If you write "new", anything after it is ignored.
             quitFlag = True
             doReplayGame = True
             break
+
+        elif userAction == "help":
+            #Same as above with "quit".  If you write "help", anything after it is ignored, and help for all commands appears.
+            print "To uncover a space, enter \"probe\" followed by coordinates. (e.g. probe 0 1)"
+            print "To flag a space, or to remove a flag from a space with one, enter \"flag\" followed by coordinates. (e.g. flag 0 1)"
+            print "To quit the game, enter \"quit\"."
+            print "To abandon the current game and start a new one, enter \"new\"."
+            print "To see these instructions, enter \"help\"."
+
         else:
             print "Error: did not recognize user action "+userAction
 
