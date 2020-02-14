@@ -241,84 +241,86 @@ class Board:
         gameBoard.printState(True)
         return True
 
+def main():
+    doReplayGame = True
+    argumentMismatchErrorMsg = "Error: Incorrect number of arguments.  For how to use commands, enter \"help\".  To end the game, enter \"quit\"."
 
+    while(doReplayGame):
+        #initialize the board
+        numRows = int(raw_input("How many rows in the board? "))
+        numColumns = int(raw_input("How many columns in the board? "))
+        numMines = int(raw_input("How many mines in the board? "))
 
-#if using imports, this would be main.py
-doReplayGame = True
-argumentMismatchErrorMsg = "Error: Incorrect number of arguments.  For how to use commands, enter \"help\".  To end the game, enter \"quit\"."
-
-while(doReplayGame):
-    #initialize the board
-    numRows = int(raw_input("How many rows in the board? "))
-    numColumns = int(raw_input("How many columns in the board? "))
-    numMines = int(raw_input("How many mines in the board? "))
-
-    gameBoard = Board(numRows, numColumns, numMines)
-    gameBoard.printState(False) #set to True to cheat and see the hidden board
-
-    boardActions = ["probe", "flag", "quit", "new"]
-    quitFlag = False
-
-    print "Board actions: "+prettyPrintBasicList(boardActions)
-    print "Coordinate system: bottom-left is 0,0.  To the right, the first number increases; as you move up, the second number increases."
-
-    while gameBoard.isBoardFinished() is False:
-
+        gameBoard = Board(numRows, numColumns, numMines)
         gameBoard.printState(False) #set to True to cheat and see the hidden board
 
-        userInput = raw_input("Enter board action followed by coordinates (e.g. probe 0 1): ").split()
-        if len(userInput) == 0:
-            print "ERROR: No user input detected.  For how to use commands, enter \"help\".  To end the game, enter \"quit\"."
+        boardActions = ["probe", "flag", "quit", "new", "help"]
+        quitFlag = False
+
+        print "Board actions: "+prettyPrintBasicList(boardActions)
+        print "Coordinate system: bottom-left is 0,0.  To the right, the first number increases; as you move up, the second number increases."
+
+        while gameBoard.isBoardFinished() is False:
+
+            gameBoard.printState(False) #set to True to cheat and see the hidden board
+
+            userInput = raw_input("Enter board action: ").split()
+            if len(userInput) == 0:
+                print "ERROR: No user input detected.  For how to use commands, enter \"help\".  To end the game, enter \"quit\"."
+                continue
+            userAction = userInput[0]
+
+            if userAction == "probe":
+                if len(userInput) != 3:
+                    print argumentMismatchErrorMsg
+                    continue
+                userX = int(userInput[1])
+                userY = int(userInput[2])
+                gameBoard.playerProbeSquare(userX, userY)
+
+            elif userAction == "flag":
+                if len(userInput) != 3:
+                    print argumentMismatchErrorMsg
+                    continue
+                userX = int(userInput[1])
+                userY = int(userInput[2])
+                gameBoard.playerToggleFlag(userX, userY)
+
+            elif userAction == "quit":
+                #Could check argument list length, but if you type "quit" first, you probably just want to quit.
+                quitFlag = True
+                doReplayGame = False
+                break
+
+            elif userAction == "new":
+                #Same as above with "quit".  If you write "new", anything after it is ignored.
+                quitFlag = True
+                doReplayGame = True
+                break
+
+            elif userAction == "help":
+                #Same as above with "quit".  If you write "help", anything after it is ignored, and help for all commands appears.
+                print "To uncover a space, enter \"probe\" followed by coordinates. (e.g. probe 0 1)"
+                print "To flag a space, or to remove a flag from a space with one, enter \"flag\" followed by coordinates. (e.g. flag 0 1)"
+                print "To quit the game, enter \"quit\"."
+                print "To abandon the current game and start a new one, enter \"new\"."
+                print "To see these instructions, enter \"help\"."
+                pauseInput = raw_input("Press the Enter key to continue... ")
+
+            else:
+                print "Error: did not recognize user action \""+userAction+"\""
+
+        if quitFlag:
             continue
-        userAction = userInput[0]
 
-        if userAction == "probe":
-            if len(userInput) != 3:
-                print argumentMismatchErrorMsg
-                continue
-            userX = int(userInput[1])
-            userY = int(userInput[2])
-            gameBoard.playerProbeSquare(userX, userY)
-
-        elif userAction == "flag":
-            if len(userInput) != 3:
-                print argumentMismatchErrorMsg
-                continue
-            userX = int(userInput[1])
-            userY = int(userInput[2])
-            gameBoard.playerToggleFlag(userX, userY)
-
-        elif userAction == "quit":
-            #Could check argument list length, but if you type "quit" first, you probably just want to quit.
-            quitFlag = True
+        replayGameResponse = raw_input("Would you like to play another game? (y for yes, any other input for no.) ")
+        if replayGameResponse != "y":
             doReplayGame = False
-            break
 
-        elif userAction == "new":
-            #Same as above with "quit".  If you write "new", anything after it is ignored.
-            quitFlag = True
-            doReplayGame = True
-            break
+    print "Program execution complete."
 
-        elif userAction == "help":
-            #Same as above with "quit".  If you write "help", anything after it is ignored, and help for all commands appears.
-            print "To uncover a space, enter \"probe\" followed by coordinates. (e.g. probe 0 1)"
-            print "To flag a space, or to remove a flag from a space with one, enter \"flag\" followed by coordinates. (e.g. flag 0 1)"
-            print "To quit the game, enter \"quit\"."
-            print "To abandon the current game and start a new one, enter \"new\"."
-            print "To see these instructions, enter \"help\"."
-
-        else:
-            print "Error: did not recognize user action "+userAction
-
-    if quitFlag:
-        continue
-
-    replayGameResponse = raw_input("Would you like to play another game? (y for yes, any other input for no.) ")
-    if replayGameResponse != "y":
-        doReplayGame = False
-
-print "Program execution complete."
+if __name__ == "__main__":
+    main()
 
 #testing ideas:
 #invalid inputs for board size or mine count
