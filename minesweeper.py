@@ -205,7 +205,7 @@ class Board:
         if squareY - 1 >= 0:
             neighbors.add((squareX, squareY-1))
 
-        if squareY + 1 < numRows:
+        if squareY + 1 < self.numRows:
             neighbors.add((squareX, squareY+1))
 
         if squareX - 1 >= 0: 
@@ -214,16 +214,16 @@ class Board:
             if squareY - 1 >= 0:
                 neighbors.add((squareX-1, squareY-1))
 
-            if squareY + 1 < numRows:
+            if squareY + 1 < self.numRows:
                 neighbors.add((squareX-1, squareY+1))
 
-        if squareX + 1 < numColumns:
+        if squareX + 1 < self.numColumns:
             neighbors.add((squareX+1, squareY))
 
             if squareY - 1 >= 0:
                 neighbors.add((squareX+1, squareY-1))
 
-            if squareY + 1 < numRows:
+            if squareY + 1 < self.numRows:
                 neighbors.add((squareX+1, squareY+1))
 
         return neighbors
@@ -238,7 +238,7 @@ class Board:
                     if self.playerBoard[rowNum][columnNum] == "#" or self.playerBoard[rowNum][columnNum] == "F":
                         return False
         print "You Win!"
-        gameBoard.printState(True)
+        #gameBoard.printState(True)
         return True
 
 def main():
