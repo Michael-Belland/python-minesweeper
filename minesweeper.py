@@ -230,7 +230,7 @@ class Board:
 
     def isBoardFinished(self):
         if self.gameOver:
-            gameBoard.printState(True)
+            self.printState(True)
             return True
         for rowNum in xrange(self.numRows):
             for columnNum in xrange(self.numColumns):
@@ -238,7 +238,7 @@ class Board:
                     if self.playerBoard[rowNum][columnNum] == "#" or self.playerBoard[rowNum][columnNum] == "F":
                         return False
         print "You Win!"
-        #gameBoard.printState(True)
+        #self.printState(True)
         return True
 
 def main():
