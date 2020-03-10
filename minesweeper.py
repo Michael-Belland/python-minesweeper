@@ -67,6 +67,40 @@ class Board:
             newBoard[i] = [displayChar] * numColumns
         return newBoard
 
+    def checkLoadBoard(self, boardRep):
+        numRows = len(boardRep) 
+        numColumns = len(boardRep[0])
+        numMines = 0
+        numFlags = 0
+        mineSet = set()
+
+        for rowNum in xrange(numRows):
+            if len(boardRep[rowNum]) != numColumns:
+                print "ERROR: All rows must be the same length"
+                return False
+            for columnNum in xrange(numColumns):
+                if boardRep[rowNum][columnNum] == "M":
+                    self.numMines += 1
+                    mineSet.add((columnNum, rowNum))
+                elif boardRep[rowNum][columnNum] == "F":
+                    self.numFlags += 1
+
+        #This board is valid
+        self.numRows = numRows
+        self.numColumns = numColumns
+        self.numMines = numMines
+        self.mines = mineSet
+        self.numFlags = numFlags
+        return True
+
+    def overwriteLoadBoard(self, boardRep):
+        if self.checkLoadBoard(boardRep):
+            self.gameOver = False
+
+            self.stateBoard = boardRep
+            self.playerBoard = self.makeNewBoard(self.numRows, self.numColumns, "#")
+            self.updateAdjacency()
+
     #TODO: fix printBoard behavior so board always is rectangular
     #      (currently, mines displays as the three character 'M', 
     #       making different rows different lengths in the output.)
@@ -116,11 +150,13 @@ class Board:
         #with oop implementation, go to each mine M -> find neighbors -> add *M to neighborMineList field (or increment a counter)
         #here, we'll just go through each square of the board and calculate the mine count separately.
 
+        self.updateAdjacency()
+
+    def updateAdjacency(self):
         for j in xrange(self.numRows):
             for i in xrange(self.numColumns):
                 if self.stateBoard[j][i] != "M":
                     neighbors = self.getNeighborSet(i, j)
-                    a = lambda (x, y): self.stateBoard[y][x] == "M"
                     neighborMineCount = len(filter(lambda (x, y): self.stateBoard[y][x] == "M", neighbors))
                     self.stateBoard[j][i] = neighborMineCount
 
@@ -254,7 +290,7 @@ def main():
         gameBoard = Board(numRows, numColumns, numMines)
         gameBoard.printState(False) #set to True to cheat and see the hidden board
 
-        boardActions = ["probe", "flag", "quit", "new", "help"]
+        boardActions = ["probe", "flag", "quit", "new", "help", "load"]
         quitFlag = False
 
         print "Board actions: "+prettyPrintBasicList(boardActions)
@@ -306,6 +342,21 @@ def main():
                 print "To abandon the current game and start a new one, enter \"new\"."
                 print "To see these instructions, enter \"help\"."
                 pauseInput = raw_input("Press the Enter key to continue... ")
+                break
+
+            elif userAction == "load":
+                if len(userInput) != 2:
+                    print argumentMismatchErrorMsg
+                    continue
+                #try/catch for filename, but for right now, use a fixed one
+                newBoardFile = open("example_map_1.txt", 'r')
+                newBoardRep = []
+                for line in newBoardFile:
+                    newBoardRep.append(line.split())
+
+                gameBoard.overwriteLoadBoard(newBoardRep)
+                break
+
 
             else:
                 print "Error: did not recognize user action \""+userAction+"\""
