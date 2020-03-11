@@ -274,7 +274,7 @@ class Board:
                     if self.playerBoard[rowNum][columnNum] == "#" or self.playerBoard[rowNum][columnNum] == "F":
                         return False
         print "You Win!"
-        #self.printState(True)
+        self.printState(True)
         return True
 
 def main():
@@ -342,7 +342,6 @@ def main():
                 print "To abandon the current game and start a new one, enter \"new\"."
                 print "To see these instructions, enter \"help\"."
                 pauseInput = raw_input("Press the Enter key to continue... ")
-                break
 
             elif userAction == "load":
                 if len(userInput) != 2:
@@ -353,10 +352,7 @@ def main():
                 newBoardRep = []
                 for line in newBoardFile:
                     newBoardRep.append(line.split())
-
                 gameBoard.overwriteLoadBoard(newBoardRep)
-                break
-
 
             else:
                 print "Error: did not recognize user action \""+userAction+"\""
