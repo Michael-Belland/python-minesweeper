@@ -82,8 +82,12 @@ class Board:
                 if boardRep[rowNum][columnNum] == "M":
                     self.numMines += 1
                     mineSet.add((columnNum, rowNum))
-                elif boardRep[rowNum][columnNum] == "F":
-                    self.numFlags += 1
+
+                #Flags aren't a part of board state!  We could encode them for saving
+                # games, but we must take extra care when a flag is on top of a mine.
+
+                #elif boardRep[rowNum][columnNum] == "F":
+                #    self.numFlags += 1
 
         #This board is valid
         self.numRows = numRows
@@ -175,6 +179,13 @@ class Board:
             print "You can't put a flag on a cleared space!"
 
     def playerProbeSquare(self, probeX, probeY):
+        if probeX < 0 or probeX >= self.numColumns:
+            print "You can't do that!  The X coordinate must be between 0 and %(maxX)d." % {"maxX": self.numColumns-1}
+            return
+        elif probeY < 0 or probeY >= self.numRows:
+            print "You can't do that!  The Y coordinate must be between 0 and %(maxY)d." % {"maxY": self.numRows-1}
+            return
+
         boardX = probeX
         boardY = self.numRows-probeY-1
 
