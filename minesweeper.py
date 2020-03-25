@@ -84,7 +84,7 @@ class Board:
                     mineSet.add((columnNum, rowNum))
 
                 #Flags aren't a part of board state!  We could encode them for saving
-                # games, but we must take extra care when a flag is on top of a mine.
+                # games, but we must take extra care when a flag is on top of a mine.r
 
                 #elif boardRep[rowNum][columnNum] == "F":
                 #    self.numFlags += 1
@@ -104,6 +104,21 @@ class Board:
             self.stateBoard = boardRep
             self.playerBoard = self.makeNewBoard(self.numRows, self.numColumns, "#")
             self.updateAdjacency()
+
+    def saveCurrentBoard(self, fileToSave):
+        outputStr = ""
+        for rowNum in xrange(self.numRows):
+            rowStr = ""
+            for columnNum in xrange(self.numColumns):
+                rowStr += str(self.stateBoard[rowNum][columnNum])
+                rowStr += " "
+            rowStr += "\n"
+            outputStr += rowStr
+        f = open(fileToSave, "w")
+        f.write(outputStr)
+        f.close()
+
+
 
     #TODO: fix printBoard behavior so board always is rectangular
     #      (currently, mines displays as the three character 'M', 
@@ -301,7 +316,7 @@ def main():
         gameBoard = Board(numRows, numColumns, numMines)
         gameBoard.printState(False) #set to True to cheat and see the hidden board
 
-        boardActions = ["probe", "flag", "quit", "new", "help", "load"]
+        boardActions = ["probe", "flag", "quit", "new", "help", "load", "save"]
         quitFlag = False
 
         print "Board actions: "+prettyPrintBasicList(boardActions)
@@ -351,6 +366,8 @@ def main():
                 print "To flag a space, or to remove a flag from a space with one, enter \"flag\" followed by coordinates. (e.g. flag 0 1)"
                 print "To quit the game, enter \"quit\"."
                 print "To abandon the current game and start a new one, enter \"new\"."
+                print "To load a game from an external file, enter \"load\" followed by the file name. (e.g. load example_map_1.txt)"
+                print "To save the game in progress to an external file, enter \"save\" followed by the desired file name."
                 print "To see these instructions, enter \"help\"."
                 pauseInput = raw_input("Press the Enter key to continue... ")
 
@@ -364,6 +381,17 @@ def main():
                 for line in newBoardFile:
                     newBoardRep.append(line.split())
                 gameBoard.overwriteLoadBoard(newBoardRep)
+
+            elif userAction == "save":
+                if len(userInput) != 2:
+                    print argumentMismatchErrorMsg
+                    continue
+                if gameBoard.isBoardSet == False:
+                    print "ERROR: Board not generated.  If you did not load this game, the board will not be generated until after you perform your first probe action.  (This guarantees your first probe will never be a mine.)"
+                    continue
+                #TODO: sanity check input for save destination
+                gameBoard.saveCurrentBoard(userInput[1])
+                print "Save complete!"
 
             else:
                 print "Error: did not recognize user action \""+userAction+"\""
